@@ -4,6 +4,7 @@
     import * as makeNode from "../../lib/classNode";
 
     let tooltipText = "";
+    let searchID = ""; // Variable to store the search ID
 
     onMount(() => {
         d3.csv('/distritos.csv').then(data => {
@@ -55,7 +56,8 @@
                     .on("mouseout", () => {
                         tooltipText = "";
                     })
-                    .merge(nodes);
+                    .merge(nodes)
+                    .attr("fill", d => d.data.id === searchID ? "red" : "orange"); // Highlight the searched node
 
                 nodes.exit().remove();
 
@@ -88,6 +90,13 @@
                 update(root, newDepthLimit);
                 g.attr("transform", transform);
             }
+
+            function searchNode() {
+                update(root, Infinity); // Redraw the graph with the new search ID
+            }
+
+            // Expose the searchNode function to the Svelte context
+            window.searchNode = searchNode;
         })
         .catch(error => {
             console.error('Error al cargar el archivo JSON:', error);
@@ -95,7 +104,14 @@
     });
 </script>
 
+<input type="text" bind:value={searchID} placeholder="Enter node ID">
+<button on:click={() => searchNode()}>Search</button>
+
 <svg id="RectangularViewDist" width=1700 height=1700>
+    <g transform="translate(850,850)">
+        <g class="links"></g>
+        <g class="nodes"></g>
+    </g>
     <g id="tooltip">
         {#if tooltipText !== ""}
             <rect x="0" y="0" width="150" height="30" fill="white" stroke="black"></rect>
